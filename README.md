@@ -58,7 +58,7 @@ docker run -d --name l4d2-server \
   -e L4D2_PORT=27015 \
   -e L4D2_SOURCETVPORT="27020" \
   -e L4D2_TICKRATE="" \
-  -v /home/ponfertato/Docker/l4d2-server:/home/steam/left4dead2-server/l4d2 \
+  -v /home/ponfertato/Docker/l4d2-server:/home/steam/l4d2-server/l4d2 \
   ponfertato/l4d2:latest
 ```
 
@@ -88,7 +88,7 @@ services:
       - L4D2_SOURCETVPORT="27020"
       - L4D2_TICKRATE=""
     volumes:
-      - ./l4d2-server:/home/steam/left4dead2-server/l4d2
+      - ./l4d2-server:/home/steam/l4d2-server/l4d2
 ```
 
 **Health Check**
