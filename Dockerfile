@@ -1,12 +1,7 @@
-FROM sonroyaalmerol/steamcmd-arm64:root as build_stage
+FROM sonroyaalmerol/steamcmd-arm64:root AS build_stage
 
 LABEL maintainer="ponfertato@ya.ru"
-LABEL description="A Dockerised version of the Counter-Strike: Source dedicated server for ARM64 (using box86)"
-
-ENV STEAMAPPID 222860
-ENV STEAMAPP l4d2
-ENV STEAMAPPDIR /home/steam/${STEAMAPP}-server
-ENV HOMEDIR /home/steam
+LABEL description="A Dockerised version of the Left 4 Dead 2 dedicated server for ARM64 (using box86)"
 
 RUN dpkg --add-architecture amd64 \
     && dpkg --add-architecture i386 \
@@ -26,21 +21,23 @@ RUN dpkg --add-architecture amd64 \
     && wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_i386.deb \
     && dpkg -i libssl1.1_1.1.1f-1ubuntu2_i386.deb \
     && rm libssl1.1_1.1.1f-1ubuntu2_i386.deb \
-    && rm -rf /var/lib/apt/lists/* 
+    && rm -rf /var/lib/apt/lists/*
+
+ENV HOMEDIR="/home/steam" \
+    STEAMAPPID="222860" \
+    STEAMAPPDIR="/home/steam/l4d2-server"
 
 COPY etc/entry.sh ${HOMEDIR}/entry.sh
 
 WORKDIR ${STEAMAPPDIR}
 
 RUN chmod +x "${HOMEDIR}/entry.sh" \
-    && chown -R "${USER}:${USER}" "${HOMEDIR}/entry.sh" "${STEAMAPPDIR}"
+    && chown -R "${USER}":"${USER}" "${HOMEDIR}/entry.sh" ${STEAMAPPDIR}
 
 FROM build_stage AS bookworm-root
 
-EXPOSE 27015/tcp 27015/udp 27005/udp 27020/udp
-
-ENV L4D2_ARGS=""\
-	L4D2_CLIENTPORT="27005" \
+ENV L4D2_ARGS="" \
+    L4D2_CLIENTPORT="27005" \
     L4D2_IP="" \
     L4D2_LAN="0" \
     L4D2_MAP="c1m1_hotel" \
@@ -49,11 +46,15 @@ ENV L4D2_ARGS=""\
     L4D2_SOURCETVPORT="27020" \
     L4D2_TICKRATE=""
 
-USER ${USER}
+EXPOSE ${L4D2_CLIENTPORT}/udp \
+    ${L4D2_PORT}/tcp \
+    ${L4D2_PORT}/udp \
+    ${L4D2_SOURCETVPORT}/udp
 
+USER ${USER}
 WORKDIR ${HOMEDIR}
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD netstat -l | grep "27015.*LISTEN"
+    CMD netstat -l | grep "${L4D2_PORT}.*LISTEN"
 
 CMD ["bash", "entry.sh"]
